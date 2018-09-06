@@ -10,3 +10,4 @@ python-socketio
 six
 Werkzeug
 PyJWT
+eventlet
