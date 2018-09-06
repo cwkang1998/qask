@@ -1,0 +1,2 @@
+
+Remember to set env variable CQLENG_ALLOW_SCHEMA_MANAGEMENT
