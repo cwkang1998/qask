@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify
 from flask.views import MethodView
-from .db import create_session
 from flask_socketio import emit, Namespace
 
-bp = Blueprint('', __name__, url_prefix='/')
+api_bp = Blueprint('', __name__, url_prefix='/')
 
 
 class RoomView(MethodView):
@@ -14,6 +13,7 @@ class RoomView(MethodView):
         #     "select * from room where room_uid = ?", room_uid)
         # if len(data) <= 1:
         #     return jsonify(data)
+        pass
 
     def post(self):
         pass
