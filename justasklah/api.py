@@ -2,17 +2,14 @@ from flask import Blueprint, jsonify
 from flask.views import MethodView
 from flask_socketio import emit, Namespace
 
-api_bp = Blueprint('', __name__, url_prefix='/')
+from .models import *
+
+api_bp = Blueprint('api', __name__, url_prefix='/')
 
 
 class RoomView(MethodView):
 
     def get(self, room_uid):
-        # session = create_session()
-        # data = session.execute(
-        #     "select * from room where room_uid = ?", room_uid)
-        # if len(data) <= 1:
-        #     return jsonify(data)
         pass
 
     def post(self):
@@ -21,13 +18,14 @@ class RoomView(MethodView):
 
 class UserView(MethodView):
     def get(self):
+        queryset = User.objects.all()
         pass
 
     def post(self):
         pass
 
 
-class ChatView(MethodView):
+class MessageView(MethodView):
     def get(self):
         pass
 
@@ -35,7 +33,7 @@ class ChatView(MethodView):
         pass
 
 
-class ChatSocket(Namespace):
+class MessageSocket(Namespace):
 
     def on_connect(self):
         pass
