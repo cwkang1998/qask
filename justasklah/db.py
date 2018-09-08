@@ -1,11 +1,9 @@
+from datetime import datetime, date
+from json import JSONEncoder
+from bson import ObjectId
 from flask_pymongo import PyMongo
-
+import isodate as iso
 mongo = PyMongo()
-
-
-def __init_db(app):
-    mongo.init_app(app)
-
 '''
 The database documents design are as follows:
 
@@ -20,6 +18,7 @@ Room
 _id(auto generated)
 room_key
 created_time
+owner
 title
 description
 password
@@ -35,3 +34,17 @@ user_alias
 likes
 dismissed
 '''
+
+def __init_db(app):
+    mongo.init_app(app)
+    app.json_encoder = MongoJSONEncoder
+
+class MongoJSONEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, (datetime, date)):
+            return iso.datetime_isoformat(o)
+        if isinstance(o, ObjectId):
+            return str(o)
+        return JSONEncoder.default(self, o)
+
+        
