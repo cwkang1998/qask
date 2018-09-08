@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify
 from flask.views import MethodView
 from flask_socketio import emit, Namespace
 
-from .models import *
+from .db import mongo
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 

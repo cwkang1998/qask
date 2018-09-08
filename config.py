@@ -2,13 +2,13 @@ import os
 
 class Config(object):
     DEBUG = True
-    CASSANDRA_KEYSPACE = 'test'
-    SECRET_KEY = 'thisisasecretkeyfordevelopment'
+    SECRET_KEY = "thisisasecretkeyfordevelopment"
+    MONGO_URI = "mongodb://localhost:27017/test"
 
 class ProductionConfig(Config):
-    CASSANDRA_KEYSPACE = 'justasklah'
     DEBUG = False
     TESTING = False
+    MONGO_URI = "mongodb://localhost:27017/justasklah"
     SECRET_KEY = os.environ.get("SECRET_KEY", default=None)
 
 class TestingConfig(Config):
