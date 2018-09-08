@@ -4,6 +4,7 @@ colorama==0.3.9
 dnspython==1.15.0
 eventlet==0.24.1
 Flask==1.0.2
+Flask-Cors==3.0.6
 Flask-PyMongo==2.1.0
 Flask-SocketIO==3.0.1
 greenlet==0.4.15
