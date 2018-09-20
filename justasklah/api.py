@@ -1,5 +1,4 @@
 from base64 import b64encode
-from time import time
 from datetime import datetime
 from hashids import Hashids
 from flask import Blueprint, jsonify, request
@@ -14,7 +13,24 @@ api_bp = Blueprint('api', __name__, url_prefix='/')
 @api_bp.route("/room", methods=["POST", "PUT"])
 def room():
     if request.method == "POST":
-        pass
+        data = request.get_json()
+        title = data.get("title")
+        description = data.get("description")
+        password = data.get("password")
+        if(title is None and
+           description is None and
+           password is None):
+            return jsonify({"error": "title, description and password required."})
+        room_id = mongo.db.room.insert_one({
+            "room_key": Hashids("room").encode(mongo.db.room.count()),
+            "mode": "normal",
+            "created_time": datetime.utcnow(),
+            "title": title,
+            "description": description,
+            "password": password
+        })
+        room = mongo.db.room.find_one({"_id":ObjectId(room_id)})
+        return jsonify(room), 201
     elif request.method == "PUT":
         pass
 
@@ -41,11 +57,12 @@ def room_join():
             result = mongo.db.user.insert_one({
                 "session_hash": session_hash,
                 "room": ObjectId(room.get("_id")),
-                "created_time": datetime.now()
+                "created_time": datetime.utcnow()
             })
             res_code = 201
             user = mongo.db.user.find_one({"_id": ObjectId(result._id)})
-        return user, res_code
+        return jsonify(user), res_code
+    return jsonify({"error": "room_key is required."}), 404
 
 
 @api_bp.route("/room/<ObjectId:room_id>/users", methods=["GET"])
