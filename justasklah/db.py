@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from json import JSONEncoder
 
+from bson import ObjectId
 from flask_pymongo import PyMongo
 import isodate as iso
 mongo = PyMongo()
@@ -20,7 +21,6 @@ _id(auto generated)
 room_key
 mode
 created_time
-owner
 title
 description
 password
@@ -37,9 +37,11 @@ likes
 dismissed
 '''
 
+
 def __init_db(app):
     mongo.init_app(app)
     app.json_encoder = MongoJSONEncoder
+
 
 class MongoJSONEncoder(JSONEncoder):
     def default(self, o):
