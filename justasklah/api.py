@@ -1,9 +1,9 @@
 from base64 import b64encode
 from datetime import datetime
 from hashids import Hashids
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from bson import ObjectId
-from flask_socketio import emit, Namespace
+from flask_socketio import send, emit, disconnect, Namespace
 
 from .db import mongo
 
@@ -75,7 +75,7 @@ def room_join():
                 return jsonify(user), 200
             else:
                 return jsonify({"error": "Invalid admin password."}), 403
-        session_hash = b64encode(request.remote_addr)
+        session_hash = b64encode(room_key+request.remote_addr)
         user = mongo.db.user.find_one(
             {"session_hash": session_hash, "room": ObjectId(room.get("_id"))})
         res_code = 200
@@ -87,6 +87,9 @@ def room_join():
             })
             res_code = 201
             user = mongo.db.user.find_one({"_id": ObjectId(result._id)})
+        session.clear()
+        session['room'] = room.get("_id")
+        session['session_hash'] = session_hash
         return jsonify(user), res_code
     return jsonify({"error": "room_key is required."}), 404
 
@@ -98,21 +101,37 @@ def room_users(room_id):
     for doc in cur:
         users.append(doc)
     cur.close()
-    return jsonify(users)
+    return jsonify(users), 200
 
 
 class MessageSocket(Namespace):
+
     def on_connect(self):
-        pass
+        room_id = session.get("room")
+        session_hash = session.get("session_hash")
+        if(room_id is not None and session_hash is not None):
+            user = mongo.db.user.find_one(
+                {"session_hash": session_hash, "room": ObjectId(room_id)})
+            if(user is not None):
+                emit("auth", jsonify({"success": "Connected."}))
+                cur = mongo.db.message.find({"room": ObjectId(room_id)})
+                msgs = []
+                for doc in cur:
+                    msgs.append(doc)
+                cur.close()
+                emit("message", jsonify({"messages":msgs}))
+        emit("auth", jsonify({"error": "Fail to authenticate."}))
+        return False  # disconnect unauthorized user
 
     def on_disconnect(self):
-        pass
+        session.clear()
 
-    def on_message(self):
-        pass
+    def on_message(self, data):
+        print(data)
+        # emit("message", jsonify(data), broadcast=True, include_self=True)
 
-    def on_like(self):
-        pass
+    def on_like(self, data):
+        print(data)
 
-    def on_dismiss(self):
-        pass
+    def on_dismiss(self, data):
+        print(data)
