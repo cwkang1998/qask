@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request, session
 from bson import ObjectId
 from flask_socketio import send, emit, disconnect, Namespace
 
-from .db import mongo
+from .db import mongo, MongoJSONEncoder
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
@@ -113,18 +113,17 @@ class MessageSocket(Namespace):
             user = mongo.db.user.find_one(
                 {"session_hash": session_hash, "room": ObjectId(room_id)})
             if(user is not None):
-                emit("auth", jsonify({"success": "Connected."}))
+                emit("auth", {"success": "Connected."})
                 cur = mongo.db.message.find({"room": ObjectId(room_id)})
                 msgs = []
                 for doc in cur:
                     msgs.append(doc)
                 cur.close()
-                emit("message", jsonify({"messages":msgs}))
-        emit("auth", jsonify({"error": "Fail to authenticate."}))
-        return False  # disconnect unauthorized user
+                emit("message", MongoJSONEncoder().encode({"messages":msgs}))
+        emit("auth", {"error": "Fail to authenticate."}, callback=disconnect)
 
     def on_disconnect(self):
-        session.clear()
+        session.clear() #todo: Change session into extra socket headers for better statelessness
 
     def on_message(self, data):
         print(data)
