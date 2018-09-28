@@ -11,8 +11,8 @@ def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
     CORS(app=app)
+    app = __init_db(app)
     app.register_blueprint(api_bp)
-    __init_db(app)
     return app
 
 

@@ -41,6 +41,7 @@ dismissed
 def __init_db(app):
     mongo.init_app(app)
     app.json_encoder = MongoJSONEncoder
+    return app
 
 
 class MongoJSONEncoder(JSONEncoder):
