@@ -13,10 +13,15 @@ api_bp = Blueprint('api', __name__, url_prefix='/')
 @api_bp.route("/room", methods=["POST"])
 def room_create():
     if request.method == "POST":
-        data = request.get_json()
-        title = data.get("title")
-        description = data.get("description")
-        password = data.get("password")
+        # data = request.json()
+        # title = data.get("title")
+        # description = data.get("description")
+        # password = data.get("password")
+
+        title = request.form['title']
+        description = request.form['description']
+        password = request.form['password']
+
         if(title is not None and
            description is not None and
            password is not None):
@@ -28,7 +33,7 @@ def room_create():
                 "description": description,
                 "password": password
             })
-            room = mongo.db.room.find_one({"_id": ObjectId(room_id)})
+            room = mongo.db.room.find_one({"_id": ObjectId(room_id.inserted_id)})
             return jsonify(room), 201
         return jsonify({"error": "title, description and password required."})
 
