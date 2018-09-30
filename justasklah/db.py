@@ -13,13 +13,13 @@ User
 _id(auto generated)
 session_hash
 room
+admin
 created_time
 
 Room
 --------------
 _id(auto generated)
 room_key
-mode
 created_time
 title
 description

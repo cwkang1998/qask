@@ -1,7 +1,7 @@
 from base64 import b64encode
 from datetime import datetime
 from hashids import Hashids
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 from bson import ObjectId
 from flask_socketio import send, emit, disconnect, Namespace
 
@@ -13,14 +13,10 @@ api_bp = Blueprint('api', __name__, url_prefix='/')
 @api_bp.route("/room", methods=["POST"])
 def room_create():
     if request.method == "POST":
-        # data = request.json()
-        # title = data.get("title")
-        # description = data.get("description")
-        # password = data.get("password")
-
-        title = request.form['title']
-        description = request.form['description']
-        password = request.form['password']
+        data = request.get_json()
+        title = data.get("title")
+        description = data.get("description")
+        password = data.get("password")
 
         if(title is not None and
            description is not None and
@@ -33,7 +29,8 @@ def room_create():
                 "description": description,
                 "password": password
             })
-            room = mongo.db.room.find_one({"_id": ObjectId(room_id.inserted_id)})
+            room = mongo.db.room.find_one(
+                {"_id": ObjectId(room_id.inserted_id)})
             return jsonify(room), 201
         return jsonify({"error": "title, description and password required."})
 
@@ -73,28 +70,27 @@ def room_join():
     password = data.get("password")
     if(room_key is not None):
         room = mongo.db.room.find_one_or_404({"room_key": room_key})
-        if(password is not None):
-            if(room.get("password") == password):
-                user = mongo.db.user.find_one_or_404(
-                    {"_id": ObjectId(room.get("owner"))})
-                return jsonify(user), 200
-            else:
-                return jsonify({"error": "Invalid admin password."}), 403
-        session_hash = b64encode(room_key+request.remote_addr)
+        session_hash = (
+            b64encode((room_key+request.remote_addr).encode())).decode("utf-8")
         user = mongo.db.user.find_one(
             {"session_hash": session_hash, "room": ObjectId(room.get("_id"))})
         res_code = 200
+        is_admin = False
         if(user is None):
+            if(password is not None):
+                if(room.get("password") == password):
+                    is_admin = True
+                else:
+                    return jsonify({"error": "Invalid admin password."}), 403
             result = mongo.db.user.insert_one({
                 "session_hash": session_hash,
                 "room": ObjectId(room.get("_id")),
+                "admin": is_admin,
                 "created_time": datetime.utcnow()
             })
             res_code = 201
-            user = mongo.db.user.find_one({"_id": ObjectId(result._id)})
-        session.clear()
-        session['room'] = room.get("_id")
-        session['session_hash'] = session_hash
+            user = mongo.db.user.find_one(
+                {"_id": ObjectId(result.inserted_id)})
         return jsonify(user), res_code
     return jsonify({"error": "room_key is required."}), 404
 
@@ -112,8 +108,8 @@ def room_users(room_id):
 class MessageSocket(Namespace):
 
     def on_connect(self):
-        room_id = session.get("room")
-        session_hash = session.get("session_hash")
+        room_id = request.headers.get("room")
+        session_hash = request.headers.get("session_hash")
         if(room_id is not None and session_hash is not None):
             user = mongo.db.user.find_one(
                 {"session_hash": session_hash, "room": ObjectId(room_id)})
@@ -124,11 +120,11 @@ class MessageSocket(Namespace):
                 for doc in cur:
                     msgs.append(doc)
                 cur.close()
-                emit("message", MongoJSONEncoder().encode({"messages":msgs}))
+                emit("message", MongoJSONEncoder().encode({"messages": msgs}))
         emit("auth", {"error": "Fail to authenticate."}, callback=disconnect)
 
     def on_disconnect(self):
-        session.clear() #todo: Change session into extra socket headers for better statelessness
+        pass  # todo: Change session into extra socket headers for better statelessness
 
     def on_message(self, data):
         print(data)
