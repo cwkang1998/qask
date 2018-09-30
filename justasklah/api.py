@@ -97,7 +97,7 @@ def room_join():
 
 @api_bp.route("/room/<ObjectId:room_id>/users", methods=["GET"])
 def room_users(room_id):
-    cur = mongo.db.user.find({"_id": ObjectId(room_id)})
+    cur = mongo.db.user.find({"_id": room_id})
     users = []
     for doc in cur:
         users.append(doc)
