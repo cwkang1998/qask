@@ -37,7 +37,7 @@ def room_create():
 
 @api_bp.route("/room/<ObjectId:room_id>", methods=["PUT"])
 def room_edit(room_id):
-    room = mongo.db.room.find_one_or_404({"_id": ObjectId(room_id)})
+    room = mongo.db.room.find_one_or_404({"_id": room_id})
     data = request.get_json()
     title = data.get("title")
     description = data.get("description")
@@ -51,14 +51,14 @@ def room_edit(room_id):
         password = room.password
     if(mode is None):
         mode = room.mode
-    update_result = mongo.db.room.update_one({"_id": ObjectId(room_id)}, {
+    update_result = mongo.db.room.update_one({"_id": room_id}, {
         "mode": mode,
         "title": title,
         "description": description,
         "password": password
     })
     if(update_result.modified_count == 1):
-        result = mongo.db.room.find_one({"_id": ObjectId(room_id)})
+        result = mongo.db.room.find_one({"_id": room_id})
         return jsonify(result), 200
     return jsonify({"error": "Update failed. Please try again"}), 404
 
