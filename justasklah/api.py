@@ -114,13 +114,14 @@ class MessageSocket(Namespace):
             user = mongo.db.user.find_one(
                 {"session_hash": session_hash, "room": ObjectId(room_id)})
             if(user is not None):
-                emit("auth", {"success": "Connected."})
+                emit("auth", {"success": "Successfully authenticated."})
                 cur = mongo.db.message.find({"room": ObjectId(room_id)})
                 msgs = []
                 for doc in cur:
                     msgs.append(doc)
                 cur.close()
-                emit("message", MongoJSONEncoder().encode({"messages": msgs}))
+                emit("message", {"messages": msgs})
+                return
         emit("auth", {"error": "Fail to authenticate."}, callback=disconnect)
 
     def on_disconnect(self):
