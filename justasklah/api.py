@@ -1,29 +1,28 @@
-from base64 import b64encode
+import uuid
 from datetime import datetime
+import pymongo
 from hashids import Hashids
 from flask import Blueprint, jsonify, request
 from bson import ObjectId
-from flask_socketio import send, emit, disconnect, Namespace
+from flask_socketio import emit, Namespace, join_room, send
 
 from .db import mongo, MongoJSONEncoder
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
 
-@api_bp.route("/room", methods=["POST"])
+@api_bp.route("/room-create/", methods=["POST"])
 def room_create():
     if request.method == "POST":
         data = request.get_json()
         title = data.get("title")
         description = data.get("description")
         password = data.get("password")
-
-        if(title is not None and
-           description is not None and
-           password is not None):
+        if (title is not None and
+                description is not None and
+                password is not None):
             room_id = mongo.db.room.insert_one({
                 "room_key": Hashids("room").encode(mongo.db.room.count()),
-                "mode": "normal",
                 "created_time": datetime.utcnow(),
                 "title": title,
                 "description": description,
@@ -35,104 +34,142 @@ def room_create():
         return jsonify({"error": "title, description and password required."})
 
 
-@api_bp.route("/room/<ObjectId:room_id>", methods=["PUT"])
-def room_edit(room_id):
-    room = mongo.db.room.find_one_or_404({"_id": room_id})
-    data = request.get_json()
-    title = data.get("title")
-    description = data.get("description")
-    password = data.get("password")
-    mode = data.get("mode")
-    if(title is None):
-        title = room._id
-    if(description is None):
-        description = room.description
-    if(password is None):
-        password = room.password
-    if(mode is None):
-        mode = room.mode
-    update_result = mongo.db.room.update_one({"_id": room_id}, {
-        "mode": mode,
-        "title": title,
-        "description": description,
-        "password": password
-    })
-    if(update_result.modified_count == 1):
-        result = mongo.db.room.find_one({"_id": room_id})
-        return jsonify(result), 200
-    return jsonify({"error": "Update failed. Please try again"}), 404
+@api_bp.route("/room-join/", methods=["POST"])
+def room_join_password(room_id):
+    # TODO this endpoint is used for authenticating user to join the room
+    # This is an extra step for room that requires password
 
-
-@api_bp.route("/room/join", methods=["POST"])
-def room_join():
+    # If authenticated
     data = request.get_json()
     room_key = data.get("room_key")
     password = data.get("password")
-    if(room_key is not None):
-        room = mongo.db.room.find_one_or_404({"room_key": room_key})
-        session_hash = (
-            b64encode((room_key+request.remote_addr).encode())).decode("utf-8")
+    session_hash = data.get("session_hash")
+
+    if (room_key is not None):
+        # TODO display message at frontend to inform either room key or password is wrong
+        room = mongo.db.room.find_one_or_404({"room_key": room_key, "password": password})
+        res_code = 404
+        if room is None:
+            return jsonify({"error": "Room key or password is wrong"}), res_code
+
+        # assign a session_hash if not
+        # before redirect at frontend, check there exists a session hash, if not assign one
+        if session_hash == "undefined":
+            session_hash = uuid.uuid4()
+
         user = mongo.db.user.find_one(
             {"session_hash": session_hash, "room": ObjectId(room.get("_id"))})
+
         res_code = 200
-        is_admin = False
-        if(user is None):
-            if(password is not None):
-                if(room.get("password") == password):
-                    is_admin = True
-                else:
-                    return jsonify({"error": "Invalid admin password."}), 403
-            result = mongo.db.user.insert_one({
+        if user is None:
+            user = mongo.db.user.insert_one({
                 "session_hash": session_hash,
                 "room": ObjectId(room.get("_id")),
-                "admin": is_admin,
+                "admin": False,
                 "created_time": datetime.utcnow()
             })
             res_code = 201
-            user = mongo.db.user.find_one(
-                {"_id": ObjectId(result.inserted_id)})
         return jsonify(user), res_code
+
     return jsonify({"error": "room_key is required."}), 404
 
 
-@api_bp.route("/room/<ObjectId:room_id>/users", methods=["GET"])
-def room_users(room_id):
-    cur = mongo.db.user.find({"room": room_id})
-    users = []
-    for doc in cur:
-        users.append(doc)
-    cur.close()
-    return jsonify(users), 200
-
-
+# admin list to govern
 class MessageSocket(Namespace):
 
+    def __init__(self, namespace=None):
+        super().__init__(namespace)
+
     def on_connect(self):
-        room_id = request.headers.get("room")
+        room_key = request.headers.get("room")
         session_hash = request.headers.get("session_hash")
-        if(room_id is not None and session_hash is not None):
+        send('connected-ns')
+        print("Room key: " + room_key)
+        print("Session hash: " + session_hash)
+        # TODO check the user in the list
+        if session_hash != "undefined":
+            # find the entry that has session id with the room id
+            # if found, this means the user is authenticated
             user = mongo.db.user.find_one(
-                {"session_hash": session_hash, "room": ObjectId(room_id)})
-            if(user is not None):
+                {"session_hash": session_hash, "room": room_key}
+            )
+            if user is not None:
                 emit("auth", {"success": "Successfully authenticated."})
-                cur = mongo.db.message.find({"room": ObjectId(room_id)})
+                # joining room
+                join_room(room_key)
+                # return the latest 20 entries
+                cursor = mongo.db.message.find({"room": ObjectId(room_key)}).sort(
+                    ("time_created", pymongo.DESCENDING)).limit(20)
                 msgs = []
-                for doc in cur:
+                for doc in cursor:
                     msgs.append(doc)
-                cur.close()
-                emit("message", {"messages": msgs})
-                return
-        emit("auth", {"error": "Fail to authenticate."}, callback=disconnect)
+                cursor.close()
+
+                # emit a collection of messages
+                # initialise interface when start connection (displaying previous data)
+                emit("initialise_interface", {"messages": msgs})
+        # emit("auth", {"error": "Failed to authenticate!"})
+        send("HELLO")
+        # TODO require redirecting to password page
 
     def on_disconnect(self):
-        pass  # todo: Change session into extra socket headers for better statelessness
+        pass  # TODO Change session into extra socket headers for better statelessness
 
     def on_message(self, data):
-        print(data)
-        # emit("message", jsonify(data), broadcast=True, include_self=True)
+        room_key = data["room"]
+        message_content = data["messageContent"]
+        session_hash = data["session_hash"]
+        alias = data["alias"]
+
+        user = mongo.db.user.find_one(
+            {"session_hash": session_hash, "room": ObjectId(room_key)}
+        )
+        room = mongo.db.room.find_one_or_404({"room_key": room_key})
+        mongo.db.message.insert_one({
+            "room": ObjectId(room.get("_id")),
+            "created_time": datetime.utcnow(),
+            "content": message_content,
+            "likes": 0,
+            "dismissed": False,
+            "user_alias": alias,
+            "user": user
+        })
+        print("Broadcasting room: " + room_key)
+        emit("message", message_content, include_self=True, room=room_key)
 
     def on_like(self, data):
         print(data)
 
-    def on_dismiss(self, data):
+    def on_editing(self, data):
         print(data)
+        emit("edit_title", data, include_self=True)
+
+    def on_edit_title(self, data):
+        # TODO onchange listener for the value at frontend
+        new_title = data["title"]
+        room_key = data["room"]
+        room = mongo.db.room.find_one_or_404({"room_key": room_key})
+        update_result = mongo.db.room.update_one({"_id": room._id}, {
+            "$set": {
+                "title": new_title,
+            }
+        })
+
+        emit("edit_title", new_title, include_self=False, room=room_key)
+
+    def on_edit_description(self, data):
+        # TODO onchange listener for the value at frontend
+        new_description = data["description"]
+        room_key = data["room"]
+        room = mongo.db.room.find_one_or_404({"room_key": room_key})
+        update_result = mongo.db.room.update_one({"_id": room._id}, {
+            "$set": {
+                "description": new_description,
+            }
+        })
+
+        emit("edit_description", new_description, include_self=False, room=room_key)
+
+    def on_dismiss(self, data):
+        # TODO
+        pass
