@@ -12,6 +12,7 @@ flask-socketio = "*"
 eventlet = "*"
 isodate = "*"
 hashids = "*"
+coverage = "*"
 
 [dev-packages]
 pylint = "*"
