@@ -1,0 +1,7 @@
+eventlet
+Flask
+Flask-Cors
+Flask-PyMongo
+Flask-SocketIO
+hashids
+isodate

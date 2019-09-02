@@ -5,4 +5,4 @@ app = create_app(CURRENT_CONFIG)
 socketio = create_socketio(app)
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, host='0.0.0.0')

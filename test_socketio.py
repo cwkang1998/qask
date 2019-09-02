@@ -39,5 +39,5 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received), 1)
         client.disconnect()
 
-        if __name__ == '__main__':
-            unittest.main()
+if __name__ == '__main__':
+    unittest.main()

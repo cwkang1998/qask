@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-import pymongo
+from pymongo import DESCENDING
 from hashids import Hashids
 from flask import Blueprint, jsonify, request
 from bson import ObjectId
@@ -9,7 +9,6 @@ from flask_socketio import emit, Namespace, join_room, send
 from .db import mongo, MongoJSONEncoder
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
-
 
 @api_bp.route("/room-create/", methods=["POST"])
 def room_create():
@@ -99,7 +98,7 @@ class MessageSocket(Namespace):
                 join_room(room_key)
                 # return the latest 20 entries
                 cursor = mongo.db.message.find({"room": ObjectId(room_key)}).sort(
-                    ("time_created", pymongo.DESCENDING)).limit(20)
+                    ("time_created", DESCENDING)).limit(20)
                 msgs = []
                 for doc in cursor:
                     msgs.append(doc)

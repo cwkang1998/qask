@@ -1,6 +1,27 @@
-web:
-  build: .
-  container_name: justasklah-backend
-  ports:
-    - "5000:5000"
-    
+version: "3.7"
+
+services:
+  app:
+    build: .
+    image: justasklah-backend:1.0.0
+    container_name: justasklah-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    restart: always
+    depends_on:
+      - mongodb
+
+  mongodb:
+    container_name: justasklah-db
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+    - MONGO_DATA_DIR=/usr/data/db
+    - MONGO_LOG_DIR=/usr/data/db_log
+    volumes:
+      - ./data/db:/usr/data/db
+      - ./data/db_log:/usr/data/db_log
+    restart: always
