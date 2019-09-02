@@ -10,6 +10,12 @@ from .db import mongo, MongoJSONEncoder
 
 api_bp = Blueprint('api', __name__, url_prefix='/')
 
+@api_bp.route('/')
+def docker_debug():
+    mongo.db.test.insert_one({
+        "message": "hello_world"
+    })
+    return "World"
 
 @api_bp.route("/room-create/", methods=["POST"])
 def room_create():
