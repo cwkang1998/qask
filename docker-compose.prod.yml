@@ -27,5 +27,5 @@ services:
     volumes:
       - ./data/db:/usr/data/db
       - ./data/db_log:/usr/data/db_log
-    command: mongod --logpath=/usr/data/db_log
+    command: mongod --logpath=/usr/data/db_log/log.txt
     restart: always
