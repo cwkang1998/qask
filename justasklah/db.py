@@ -23,7 +23,8 @@ room_key
 created_time
 title
 description
-password
+password (user)
+password (admin)
 
 Message
 --------------
@@ -33,10 +34,9 @@ content
 room
 user
 user_alias
-likes
-dismissed
+# likes
+# dismissed
 '''
-
 
 def __init_db(app):
     mongo.init_app(app)
