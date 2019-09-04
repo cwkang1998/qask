@@ -19,10 +19,7 @@ build/
 
 # Other files
 Dockerfile
-docker-compose.yml
 docker-compose.prod.yml
-Pipfile
-Pipfile.lock
 socketclient.htmlcov
 test_socketio.py
 test.py

@@ -1,9 +1,23 @@
-# use this docker file for development
 version: "3.7"
 services:
+  app_backend:
+    container_name: "app-backend"
+    build: .
+    image: app-backend:1.0.0
+    ports:
+      - "5000:5000"
+    environment:
+      - ENV=development
+      - DB=mongodb://localhost:27017/justasklah
+    volumes:
+      - .:/app
+    restart: always
+    depends_on:
+      - mongodb
+
   mongodb:
+    container_name: "app-db"
     image: mongo:latest
-    container_name: "justasklah-db-dev"
     ports:
       - "27017:27017"
     environment:

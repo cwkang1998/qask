@@ -12,10 +12,10 @@ api_bp = Blueprint('api', __name__, url_prefix='/')
 
 @api_bp.route('/')
 def docker_debug():
-    mongo.db.test.insert_one({
-        "message": "hello_world"
-    })
-    return "World"
+    # mongo.db.test.insert_one({
+    #     "message": "hello_world"
+    # })
+    return "Hello world"
 
 @api_bp.route("/room-create/", methods=["POST"])
 def room_create():
