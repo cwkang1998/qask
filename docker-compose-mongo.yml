@@ -1,9 +1,9 @@
 # use this docker file for development
-version: "0"
+version: "3.7"
 services:
   mongodb:
     image: mongo:latest
-    container_name: "justasklah-db"
+    container_name: "justasklah-db-dev"
     ports:
       - "27017:27017"
     environment:

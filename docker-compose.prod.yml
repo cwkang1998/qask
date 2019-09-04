@@ -1,5 +1,5 @@
 # use this docker file for deployment
-version: "0"
+version: "3.7"
 services:
   app:
     build: .
