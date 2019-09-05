@@ -6,7 +6,8 @@ from flask_pymongo import PyMongo
 import isodate as iso
 
 mongo = PyMongo()
-'''
+
+"""
 The database documents design are as follows:
 
 User
@@ -37,7 +38,7 @@ user
 user_alias
 # likes
 # dismissed
-'''
+"""
 
 
 def __init_db(app):

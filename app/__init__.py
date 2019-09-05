@@ -2,7 +2,7 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from .db import __init_db
-from .api.host import api_bp, MessageSocket
+from .api import api_bp, MessageSocket
 
 
 def create_app(config):
