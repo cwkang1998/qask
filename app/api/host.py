@@ -1,21 +1,16 @@
-import uuid
+from . import *
 from datetime import datetime
 from pymongo import DESCENDING
 from hashids import Hashids
-from flask import Blueprint, jsonify, request
 from bson import ObjectId
 from flask_socketio import emit, Namespace, join_room, send
 
-from .db import mongo, MongoJSONEncoder
+from ..db import mongo, MongoJSONEncoder
 
-api_bp = Blueprint('api', __name__, url_prefix='/')
+"""
+Host defined api
+"""
 
-@api_bp.route('/')
-def docker_debug():
-    # mongo.db.test.insert_one({
-    #     "message": "hello_world"
-    # })
-    return "Hello world"
 
 @api_bp.route("/room-create/", methods=["POST"])
 def room_create():
@@ -24,9 +19,7 @@ def room_create():
         title = data.get("title")
         description = data.get("description")
         password = data.get("password")
-        if (title is not None and
-                description is not None and
-                password is not None):
+        if None not in [title, description, password]:
             room_id = mongo.db.room.insert_one({
                 "room_key": Hashids("room").encode(mongo.db.room.count()),
                 "created_time": datetime.utcnow(),
@@ -39,45 +32,6 @@ def room_create():
             return jsonify(room), 201
         return jsonify({"error": "title, description and password required."})
 
-
-@api_bp.route("/room-join/", methods=["POST"])
-def room_join_password(room_id):
-    # TODO this endpoint is used for authenticating user to join the room
-    # This is an extra step for room that requires password
-
-    # If authenticated
-    data = request.get_json()
-    room_key = data.get("room_key")
-    password = data.get("password")
-    session_hash = data.get("session_hash")
-
-    if (room_key is not None):
-        # TODO display message at frontend to inform either room key or password is wrong
-        room = mongo.db.room.find_one_or_404({"room_key": room_key, "password": password})
-        res_code = 404
-        if room is None:
-            return jsonify({"error": "Room key or password is wrong"}), res_code
-
-        # assign a session_hash if not
-        # before redirect at frontend, check there exists a session hash, if not assign one
-        if session_hash == "undefined":
-            session_hash = uuid.uuid4()
-
-        user = mongo.db.user.find_one(
-            {"session_hash": session_hash, "room": ObjectId(room.get("_id"))})
-
-        res_code = 200
-        if user is None:
-            user = mongo.db.user.insert_one({
-                "session_hash": session_hash,
-                "room": ObjectId(room.get("_id")),
-                "admin": False,
-                "created_time": datetime.utcnow()
-            })
-            res_code = 201
-        return jsonify(user), res_code
-
-    return jsonify({"error": "room_key is required."}), 404
 
 
 # admin list to govern
@@ -99,7 +53,7 @@ class MessageSocket(Namespace):
             user = mongo.db.user.find_one(
                 {"session_hash": session_hash, "room": room_key}
             )
-            if user is not None:
+            if user:
                 emit("auth", {"success": "Successfully authenticated."})
                 # joining room
                 join_room(room_key)

@@ -10,7 +10,7 @@ services:
       - ENV=production
       - DB=mongodb://localhost:27017/justasklah
     volumes:
-      - .:/app
+      - .:/usr/src/app
     restart: always
     depends_on:
       - mongodb
