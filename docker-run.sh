@@ -4,7 +4,7 @@ mkdir -p data/{db,db_log}
 sudo chmod 777 data/*
 filename="docker-compose.yml"
 
-if [ "$mode" = "rebuild" ]; then
+if [ "$1" = "rebuild" ]; then
   docker-compose -f $filename up --force-recreate --build
 else
   docker-compose -f $filename up
