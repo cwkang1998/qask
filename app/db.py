@@ -10,14 +10,6 @@ mongo = PyMongo()
 """
 The database documents design are as follows:
 
-User
--------------
-_id(auto generated)
-session_hash
-room
-admin
-created_time
-
 Room
 --------------
 _id(auto generated)
@@ -25,8 +17,16 @@ room_key
 created_time
 title
 description
-password (user)
-password (admin)
+password
+messages = [Message]
+current_users = [Users]
+
+User
+_____________
+_id(auto generated)
+session_key
+alias
+status = [active, block]
 
 Message
 --------------
@@ -35,9 +35,8 @@ created_time
 content
 room
 user
-user_alias
-# likes
-# dismissed
+upvotes
+dismissed
 """
 
 

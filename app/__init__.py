@@ -16,5 +16,4 @@ def create_app(config):
 
 def create_socketio(app):
     socketio = SocketIO(app)
-    socketio.on_namespace(MessageSocket('/message/socket'))
     return socketio
