@@ -5,11 +5,6 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_DATA_DIR=/usr/data/db
-      - MONGO_LOG_DIR=/usr/data/db_log
     volumes:
-      - ./data/db:/usr/data/db
-      - ./data/db_log:/usr/data/db_log
-    command: mongod --logpath=/usr/data/db_log/log.txt
+      - ./data/db:/data/db
     restart: always
