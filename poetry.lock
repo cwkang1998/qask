@@ -79,7 +79,7 @@ IDNA = ["idna (>=2.1)"]
 
 [[package]]
 name = "eventlet"
-version = "0.30.3"
+version = "0.31.0"
 description = "Highly concurrent networking library"
 category = "main"
 optional = false
@@ -409,7 +409,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "a9c82d249dfe9bfd856ba55531681d8322c5da42c8cc68fb927a7fa4fd904892"
+content-hash = "558f323351fba021237ec8a18120ab540761c4848515adaa0dbc4f3d984dcb21"
 
 [metadata.files]
 appdirs = [
@@ -440,8 +440,8 @@ dnspython = [
     {file = "dnspython-1.16.0.zip", hash = "sha256:36c5e8e38d4369a08b6780b7f27d790a292b2b08eea01607865bf0936c558e01"},
 ]
 eventlet = [
-    {file = "eventlet-0.30.3-py2.py3-none-any.whl", hash = "sha256:c4e2c5452e54a267f5ce56092eeeed3d52d5c9319e545a796ab5ebbb5b2528ef"},
-    {file = "eventlet-0.30.3.tar.gz", hash = "sha256:a802caa725d6eb2d45a763c33f6bb5206e8d0566d5abc03638225379cf32476d"},
+    {file = "eventlet-0.31.0-py2.py3-none-any.whl", hash = "sha256:27ae41fad9deed9bbf4166f3e3b65acc15d524d42210a518e5877da85a6b8c5d"},
+    {file = "eventlet-0.31.0.tar.gz", hash = "sha256:b36ec2ecc003de87fc87b93197d77fea528aa0f9204a34fdf3b2f8d0f01e017b"},
 ]
 flask = [
     {file = "Flask-1.1.4-py2.py3-none-any.whl", hash = "sha256:c34f04500f2cbbea882b1acb02002ad6fe6b7ffa64a6164577995657f50aed22"},
