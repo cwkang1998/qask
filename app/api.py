@@ -91,9 +91,6 @@ def room_join_password(room_id):
 
 # admin list to govern
 class MessageSocket(Namespace):
-    def __init__(self, namespace=None):
-        super().__init__(namespace)
-
     def on_connect(self):
         room_key = request.headers.get("room")
         session_hash = request.headers.get("session_hash")
