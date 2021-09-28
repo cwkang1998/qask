@@ -1,5 +1,5 @@
-from app import create_app, create_socketio
 import os
+from app import create_app, create_socketio
 
 PORT = os.environ.get("PORT", "5000")
 TEST = os.environ.get("TEST", False)
