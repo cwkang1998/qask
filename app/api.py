@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict
 import uuid
+from flask.app import Flask
 
 from hashids import Hashids
 from pymongo import DESCENDING
@@ -12,10 +13,8 @@ import flask_socketio as fsio
 from .db import mongo, MongoJSONEncoder
 
 
-def setupApi(app, socketio):
-    api_bp = Blueprint("api", __name__, url_prefix="/")
-
-    @api_bp.route("/room", methods=["POST"])
+def setupApi(app: Flask, socketio):
+    @app.route("/room", methods=["POST"])
     def create_room():
         data = request.get_json()
         if not data:
@@ -39,20 +38,19 @@ def setupApi(app, socketio):
         return {"error": "title, description and password required."}, 400
 
     # General endpoints
-    @api_bp.route("/room/<string:room_key>", methods=["GET"])
+    @app.route("/room/<room_key>", methods=["GET"])
     def get_room(room_key):
         res_code = 404
-
         if room_key:
             res_code = 200
             room = mongo.db.room.find_one_or_404({"room_key": room_key})
             room = jsonify(room)
             del room["password"]
-            return room, res_code
+            return jsonify(room), res_code
 
         return {"error": "room_key is required."}, res_code
 
-    @api_bp.route("/room/<string:room_key>", methods=["POST"])
+    @app.route("/room/<room_key>", methods=["POST"])
     def join_room(room_key):
         res_code = 400
 
@@ -91,7 +89,7 @@ def setupApi(app, socketio):
 
     # Socketio endpoints
     @socketio.on("message", namespace="/message-channel")
-    def socketio_messaging(data: Dict[str, Any]):
+    def messaging(data: Dict[str, Any]):
 
         session_key = data.get("session_key", None)
         room_key = data.get("room_key", None)
@@ -107,5 +105,3 @@ def setupApi(app, socketio):
                 fsio.emit("message", {room_key, message, created_time}, broadcast=True)
                 return
         fsio.emit("error", "Failed to send message")
-
-    app.register_blueprint(api_bp)
