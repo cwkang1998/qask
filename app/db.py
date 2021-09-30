@@ -33,8 +33,7 @@ Message
 _id(auto generated)
 created_time
 content
-room
-user
+user -> identified by session_key
 upvotes
 dismissed
 """
