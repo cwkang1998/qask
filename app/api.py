@@ -13,7 +13,7 @@ import flask_socketio as fsio
 from .db import mongo, MongoJSONEncoder
 
 
-def setupApi(app: Flask, socketio):
+def setup_api(app: Flask, socketio):
     @app.route("/room", methods=["POST"])
     def create_room():
         data = request.get_json()
