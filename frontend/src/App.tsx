@@ -4,6 +4,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import { Room } from "./pages/Room";
 
@@ -14,7 +15,11 @@ function App() {
     <>
       <CssBaseline />
       <ThemeProvider theme={theme}>
-        <Room />
+        <Router>
+          <Routes>
+            <Route path="/" element={<Room />} />
+          </Routes>
+        </Router>
       </ThemeProvider>
     </>
   );
