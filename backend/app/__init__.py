@@ -2,7 +2,7 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from .db import __init_db
-from .api import setupApi
+from .api import setup_api
 
 
 def create_app(config):
@@ -12,5 +12,5 @@ def create_app(config):
     CORS(app=app)
     app = __init_db(app)
     socketio = SocketIO(app)
-    setupApi(app, socketio)
+    setup_api(app, socketio)
     return app, socketio
